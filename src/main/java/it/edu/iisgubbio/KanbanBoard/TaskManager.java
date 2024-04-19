@@ -6,6 +6,7 @@ import java.util.Optional;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Example;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.HttpStatusCode;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -71,14 +72,26 @@ public class TaskManager {
         Optional<Task> k = repoTask.findById(id);
         if(k.isPresent()) {
         	Task t = k.get();
+        	
         	t.setTitolo(td.getTitolo());
             t.setDescrizione(td.getDescrizione());
             t.setAssegnatario(td.getAssegnatario());
-            t.setStato(td.getStato());
+            if(statoVNumerico(td.getStato()) >= statoVNumerico(t.getStato())) {
+            	t.setStato(td.getStato());
+            } else {
+            	throw new ResponseStatusException(HttpStatus.NOT_ACCEPTABLE);
+            }
             t.setPriorita(td.getPriorita());
             repoTask.save(t);
         } else {
             throw new ResponseStatusException(HttpStatus.NOT_FOUND);
         }
     }
+    
+    public int statoVNumerico(String x) {
+    	if(x.equals("nuovo")) return 0;
+    	else if(x.equals("in lavorazione")) return 1;
+    	else return 2;
+    }
+    
 }
